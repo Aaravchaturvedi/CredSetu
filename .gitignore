@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output and test artifacts
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Environment files (keep the examples committed)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Expo / React Native (used from Step 3 onward)
+.expo/
+web-build/
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# User-uploaded receipt images
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Local Prisma/SQLite artifacts
+backend/prisma/*.db

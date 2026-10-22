@@ -1,0 +1,27 @@
+# Local PostgreSQL for MiniLedger.
+# Start it with: docker compose up -d
+# Stop it with:  docker compose down
+# Delete the data too: docker compose down -v
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: miniledger-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: miniledger
+      POSTGRES_PASSWORD: miniledger
+      POSTGRES_DB: miniledger
+    ports:
+      # host:container — change 5432 on the left if it is already in use.
+      - "5432:5432"
+    volumes:
+      # Named volume keeps data between container restarts.
+      - miniledger_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U miniledger -d miniledger"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  miniledger_pgdata:
