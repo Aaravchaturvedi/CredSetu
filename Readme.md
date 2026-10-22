@@ -4,8 +4,9 @@ MiniLedger is a small mobile app for tracking money lent to friends. It uses a
 phone-number + mock-OTP login, a PostgreSQL database, an Express/TypeScript API,
 and an Expo React Native client.
 
-> This project is being built in stages. Step 1 (project setup + database schema)
-> is complete. The API, mobile client, and tests follow in later steps.
+> This project is being built in stages. Steps 1–2 (project setup, database
+> schema, and backend API) are complete. The mobile client and automated tests
+> follow in later steps.
 
 ## Repository layout
 
@@ -16,7 +17,7 @@ CredSetu/
 │   ├── prisma/
 │   │   ├── schema.prisma    # Database models (single source of truth)
 │   │   └── migrations/      # Versioned SQL migrations
-│   ├── src/                 # API source (added in Step 2)
+│   ├── src/                 # Express API source
 │   ├── tests/               # Jest tests (added in Step 4)
 │   ├── .env.example
 │   ├── jest.config.js
@@ -63,9 +64,13 @@ docker compose down -v # Stop PostgreSQL and delete its data
 
 # From backend/:
 cd backend
+npm run dev            # Start the API with auto-reload
 npm run db:studio      # Browse tables/data in Prisma Studio
 npm run db:deploy      # Apply committed migrations (safe to repeat)
 ```
+
+The API starts at `http://localhost:4000`. Health check:
+`GET http://localhost:4000/health`.
 
 ## Database model
 
@@ -78,13 +83,48 @@ npm run db:deploy      # Apply committed migrations (safe to repeat)
 Money is stored as `DECIMAL(12,2)`, not a float, so calculations stay exact.
 Overdue means: `is_repaid = false AND due_date < today` (UTC date).
 
-## Planned API
+## API
 
 ```text
-POST  /auth/login          Request a mock OTP (printed on the server)
-POST  /auth/verify         Exchange phone + OTP for a JWT
-POST  /loans               Create a loan
-GET   /loans               List the signed-in user's loans
-PATCH /loans/:id/repay     Mark one loan as repaid
-GET   /loans/summary       Totals for lent / repaid / overdue
+POST  /auth/login              Request a mock OTP (printed on the server)
+POST  /auth/verify             Exchange phone + OTP for a JWT
+POST  /uploads/receipt         Upload a receipt image (multipart)
+POST  /loans                   Create a loan
+GET   /loans                   List the signed-in user's loans
+PATCH /loans/:id/repay         Mark one loan as repaid
+GET   /loans/summary           Totals for lent / repaid / overdue
+GET   /health                  Liveness check
 ```
+
+All routes except `/auth/*`, `/health`, and static receipt files require:
+
+```http
+Authorization: Bearer <token>
+```
+
+Request examples:
+
+```http
+POST /auth/login
+{ "phone": "+919876543210" }
+
+POST /auth/verify
+{ "phone": "+919876543210", "otp": "123456" }
+
+POST /loans
+{
+  "friendName": "Rahul",
+  "amount": 1500.50,
+  "dueDate": "2026-10-31",
+  "receiptImageUrl": "http://localhost:4000/uploads/<file>.jpg"
+}
+```
+
+Receipt upload uses `multipart/form-data` with a file field named `receipt`
+(max 5 MB; JPEG, PNG, or WebP). The response contains the URL to send when
+creating a loan.
+
+> When testing with Expo Go on a physical phone, set `PUBLIC_BASE_URL` in
+> `backend/.env` to your computer's LAN IP (for example
+> `http://192.168.1.20:4000`), otherwise uploaded image URLs point at the
+> phone's own localhost.
