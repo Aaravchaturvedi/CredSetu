@@ -49,13 +49,22 @@ npm install
 npm run db:migrate
 ```
 
+> **Working directory matters:** `docker compose` commands run from the
+> repository root. Every `npm` command must run from `backend/`, because that is
+> where `package.json` is located.
+
 Useful commands:
 
 ```bash
-npm run db:studio      # Browse tables/data in Prisma Studio
+# From the repository root:
 docker compose ps      # Check PostgreSQL health
 docker compose down    # Stop PostgreSQL (data is preserved)
 docker compose down -v # Stop PostgreSQL and delete its data
+
+# From backend/:
+cd backend
+npm run db:studio      # Browse tables/data in Prisma Studio
+npm run db:deploy      # Apply committed migrations (safe to repeat)
 ```
 
 ## Database model
